@@ -6,8 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from core.cart import SessionCart
-from core.models import Warehouse
-from core.utils import resolve_warehouse
+from core.utils import accessible_warehouses, resolve_warehouse
 from inventory.models import Item, Stock
 from parties.models import Party
 
@@ -17,14 +16,8 @@ from .services import InsufficientStockError, complete_sale
 CART_SESSION_KEY = "sales_cart"
 
 
-def _accessible_warehouses(user):
-    if user.role == user.Role.OWNER or not user.assigned_warehouses.exists():
-        return Warehouse.objects.filter(is_active=True)
-    return user.assigned_warehouses.filter(is_active=True)
-
-
 def _current_warehouse(request):
-    warehouses = _accessible_warehouses(request.user)
+    warehouses = accessible_warehouses(request.user)
     warehouse_id = request.session.get("pos_warehouse_id")
     warehouse = resolve_warehouse(warehouses, warehouse_id)
     return warehouse or warehouses.first()
@@ -39,7 +32,7 @@ def _cart_context(request, warehouse):
 
 @login_required
 def pos(request):
-    warehouses = _accessible_warehouses(request.user)
+    warehouses = accessible_warehouses(request.user)
     warehouse = _current_warehouse(request)
     if warehouse:
         request.session["pos_warehouse_id"] = warehouse.id
@@ -56,7 +49,7 @@ def pos(request):
 @login_required
 def set_warehouse(request):
     warehouse_id = request.GET.get("warehouse_id") or request.POST.get("warehouse_id")
-    warehouses = _accessible_warehouses(request.user)
+    warehouses = accessible_warehouses(request.user)
     warehouse = resolve_warehouse(warehouses, warehouse_id)
     if warehouse:
         request.session["pos_warehouse_id"] = warehouse.id

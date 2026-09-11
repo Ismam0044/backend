@@ -2,6 +2,7 @@
 Django settings for config project.
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 import dj_database_url
@@ -49,6 +50,8 @@ INSTALLED_APPS = [
     "django_htmx",
     "simple_history",
     "axes",
+    "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",
     # local apps
     "core",
     "inventory",
@@ -58,6 +61,7 @@ INSTALLED_APPS = [
     "accounts",
     "reports",
     "assistant",
+    "api",
 ]
 
 MIDDLEWARE = [
@@ -179,3 +183,32 @@ if not DEBUG:
 
 SESSION_COOKIE_AGE = 60 * 60 * 8  # 8 hours; POS terminals shouldn't stay logged in forever
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# --- REST API (mobile app) -------------------------------------------------
+# Additive only - session auth above keeps serving the HTMX web app unchanged;
+# JWT auth only ever applies under /api/v1/.
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+    "DEFAULT_PAGINATION_CLASS": "api.pagination.StandardPagination",
+    "PAGE_SIZE": 25,
+    "EXCEPTION_HANDLER": "api.exceptions.api_exception_handler",
+    "DEFAULT_PARSER_CLASSES": [
+        "rest_framework.parsers.JSONParser",
+        "rest_framework.parsers.MultiPartParser",
+    ],
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    # Mirrors the SESSION_COOKIE_AGE reasoning above - POS-style devices
+    # shouldn't stay logged in forever.
+    "REFRESH_TOKEN_LIFETIME": timedelta(hours=12),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
+}

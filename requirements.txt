@@ -11,6 +11,8 @@ Django==6.1.1
 django-axes==8.3.1
 django-htmx==1.29.0
 django-simple-history==3.13.0
+djangorestframework==3.18.1
+djangorestframework-simplejwt==5.5.1
 google-auth==2.57.1
 google-genai==2.22.0
 gunicorn==26.2.0

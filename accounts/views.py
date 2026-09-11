@@ -8,21 +8,14 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from core.models import Warehouse
-from core.utils import resolve_warehouse
+from core.utils import accessible_warehouses, resolve_warehouse
 
 from .models import CashBookEntry
 
 
-def _accessible_warehouses(user):
-    if user.role == user.Role.OWNER or not user.assigned_warehouses.exists():
-        return Warehouse.objects.filter(is_active=True)
-    return user.assigned_warehouses.filter(is_active=True)
-
-
 @login_required
 def cash_book(request):
-    warehouses = _accessible_warehouses(request.user)
+    warehouses = accessible_warehouses(request.user)
     warehouse_id = request.GET.get("warehouse_id")
     today = timezone.localdate()
     date_from = request.GET.get("date_from") or (today - timedelta(days=30)).isoformat()
@@ -56,7 +49,7 @@ def cash_book(request):
 @login_required
 @require_POST
 def add_cash_entry(request):
-    warehouses = _accessible_warehouses(request.user)
+    warehouses = accessible_warehouses(request.user)
     warehouse = resolve_warehouse(warehouses, request.POST.get("warehouse_id"))
     try:
         amount = Decimal(request.POST.get("amount") or "0")
