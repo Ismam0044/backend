@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block page_title %}Low Stock Report{% endblock %}
+{% block content %}
+<div class="card-surface p-3 mb-3">
+    <form method="get" class="d-flex gap-2 align-items-end">
+        <div>
+            <label class="form-label" for="id-warehouse">Warehouse</label>
+            <select id="id-warehouse" name="warehouse_id" class="form-select form-select-sm">
+                <option value="">All</option>
+                {% for w in warehouses %}
+                    <option value="{{ w.id }}" {% if selected_warehouse_id == w.id|stringformat:"s" %}selected{% endif %}>{{ w.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button class="btn btn-sm btn-primary">Filter</button>
+    </form>
+</div>
+
+<div class="card-surface">
+    <div class="table-responsive">
+    <table class="table table-clean mb-0">
+        <thead><tr><th>Item</th><th>Warehouse</th><th class="text-end">In Stock</th><th class="text-end">Reorder Level</th></tr></thead>
+        <tbody>
+        {% for s in low_items %}
+            <tr>
+                <td class="fw-semibold">{{ s.item.name }}</td>
+                <td>{{ s.warehouse.name }}</td>
+                <td class="text-end balance-positive">{{ s.quantity }} {{ s.item.unit.short_name }}</td>
+                <td class="text-end text-muted">{{ s.item.reorder_level }} {{ s.item.unit.short_name }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="4" class="text-center text-muted py-4">No items are below their reorder level.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,149 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}A2i ERP{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{% static 'css/app.css' %}" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script>
+        // Django's CSRF protection requires this header on every unsafe
+        // request. Plain <form>{% csrf_token %}</form> submissions already
+        // include it, but the cart/POS screens trigger POSTs via hx-post on
+        // bare divs/inputs (no form), so htmx needs to be told to attach it.
+        document.addEventListener('htmx:configRequest', function (event) {
+            function getCookie(name) {
+                const match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+                return match ? match.pop() : '';
+            }
+            event.detail.headers['X-CSRFToken'] = getCookie('csrftoken');
+        });
+    </script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <div class="app-shell">
+        <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <span class="badge-dot"><i class="bi bi-shop"></i></span>
+                A2i ERP
+            </div>
+
+            <div class="sidebar-section">Overview</div>
+            <a href="{% url 'dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i class="bi bi-grid-1x2"></i> Dashboard
+            </a>
+
+            <div class="sidebar-section">Transactions</div>
+            <a href="{% url 'sales:pos' %}" class="sidebar-link {% if request.resolver_match.app_name == 'sales' %}active{% endif %}">
+                <i class="bi bi-cart-check"></i> Sales / POS
+            </a>
+            <a href="{% url 'purchase:entry' %}" class="sidebar-link {% if request.resolver_match.app_name == 'purchase' %}active{% endif %}">
+                <i class="bi bi-truck"></i> Purchase
+            </a>
+
+            <div class="sidebar-section">Records</div>
+            <a href="{% url 'parties:list' %}" class="sidebar-link {% if request.resolver_match.app_name == 'parties' %}active{% endif %}">
+                <i class="bi bi-people"></i> Parties &amp; Ledger
+            </a>
+            <a href="{% url 'accounts:cash_book' %}" class="sidebar-link {% if request.resolver_match.app_name == 'accounts' %}active{% endif %}">
+                <i class="bi bi-journal-text"></i> Cash Book
+            </a>
+            <a href="/admin/inventory/item/" class="sidebar-link">
+                <i class="bi bi-box-seam"></i> Items &amp; Stock
+            </a>
+            <a href="{% url 'inventory:transfer_entry' %}" class="sidebar-link {% if request.resolver_match.app_name == 'inventory' %}active{% endif %}">
+                <i class="bi bi-arrow-left-right"></i> Stock Transfer
+            </a>
+
+            <div class="sidebar-section">Reports</div>
+            <a href="{% url 'reports:index' %}" class="sidebar-link {% if request.resolver_match.app_name == 'reports' %}active{% endif %}">
+                <i class="bi bi-bar-chart"></i> Reports
+            </a>
+
+            <div class="sidebar-section">AI Assistant</div>
+            <a href="{% url 'assistant:chat' %}" class="sidebar-link {% if request.resolver_match.url_name == 'chat' %}active{% endif %}">
+                <i class="bi bi-chat-dots"></i> Ask AI
+            </a>
+            <a href="{% url 'assistant:reorder' %}" class="sidebar-link {% if request.resolver_match.url_name == 'reorder' %}active{% endif %}">
+                <i class="bi bi-graph-up-arrow"></i> Smart Reorder
+            </a>
+            <a href="{% url 'assistant:scan_list' %}" class="sidebar-link {% if request.resolver_match.app_name == 'assistant' and 'scan' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="bi bi-camera"></i> Scan Receipt
+            </a>
+
+            <div class="sidebar-section">System</div>
+            <a href="/admin/" class="sidebar-link">
+                <i class="bi bi-gear"></i> Admin Panel
+            </a>
+        </aside>
+
+        <div class="main-col">
+            <header class="topbar">
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Toggle menu">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <h1>{% block page_title %}{% endblock %}</h1>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-muted small">
+                        <i class="bi bi-person-circle"></i>
+                        <span class="hide-mobile-label">{{ user.get_full_name|default:user.username }}</span>
+                        <span class="badge badge-soft-primary ms-1">{{ user.get_role_display }}</span>
+                    </span>
+                    <form method="post" action="{% url 'logout' %}" class="m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-secondary" aria-label="Log out">
+                            <i class="bi bi-box-arrow-right"></i> <span class="hide-mobile-label">Log out</span>
+                        </button>
+                    </form>
+                </div>
+            </header>
+            <main class="content">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} py-2">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    {% else %}
+        {% block auth_content %}{% endblock %}
+    {% endif %}
+    <script>
+        (function () {
+            var sidebar = document.getElementById('sidebar');
+            var toggle = document.getElementById('menu-toggle');
+            var backdrop = document.getElementById('sidebar-backdrop');
+            if (!sidebar || !toggle || !backdrop) return;
+
+            function closeMenu() {
+                sidebar.classList.remove('is-open');
+                document.body.classList.remove('sidebar-open');
+            }
+            function openMenu() {
+                sidebar.classList.add('is-open');
+                document.body.classList.add('sidebar-open');
+            }
+
+            toggle.addEventListener('click', function () {
+                sidebar.classList.contains('is-open') ? closeMenu() : openMenu();
+            });
+            backdrop.addEventListener('click', closeMenu);
+            sidebar.querySelectorAll('a').forEach(function (link) {
+                link.addEventListener('click', closeMenu);
+            });
+        })();
+    </script>
+</body>
+</html>

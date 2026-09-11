@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block page_title %}Dues Report{% endblock %}
+{% block content %}
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card-surface p-3 mb-2">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Receivables (customers owe us)</h6>
+                <span class="fw-bold balance-positive">৳{{ total_receivable }}</span>
+            </div>
+        </div>
+        <div class="card-surface">
+            <div class="table-responsive">
+            <table class="table table-clean mb-0">
+                <thead><tr><th>Party</th><th class="text-end">Balance</th><th></th></tr></thead>
+                <tbody>
+                {% for row in receivables %}
+                    <tr>
+                        <td>{{ row.party.name }}</td>
+                        <td class="text-end balance-positive">৳{{ row.balance }}</td>
+                        <td class="text-end"><a href="{% url 'parties:detail' row.party.pk %}" class="btn btn-sm btn-outline-primary">View</a></td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="3" class="text-center text-muted py-3">No receivables.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card-surface p-3 mb-2">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Payables (we owe suppliers)</h6>
+                <span class="fw-bold balance-negative">৳{{ total_payable }}</span>
+            </div>
+        </div>
+        <div class="card-surface">
+            <div class="table-responsive">
+            <table class="table table-clean mb-0">
+                <thead><tr><th>Party</th><th class="text-end">Balance</th><th></th></tr></thead>
+                <tbody>
+                {% for row in payables %}
+                    <tr>
+                        <td>{{ row.party.name }}</td>
+                        <td class="text-end balance-negative">৳{{ row.balance|floatformat:2 }}</td>
+                        <td class="text-end"><a href="{% url 'parties:detail' row.party.pk %}" class="btn btn-sm btn-outline-primary">View</a></td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="3" class="text-center text-muted py-3">No payables.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

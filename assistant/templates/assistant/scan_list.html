@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block page_title %}Scan Receipt{% endblock %}
+{% block content %}
+<div class="card-surface p-3 mb-3">
+    <h6 class="mb-2"><i class="bi bi-stars text-primary"></i> Upload a Purchase Receipt</h6>
+    <p class="text-muted small">Take a photo of a supplier's paper invoice — AI will read it and pre-fill a purchase entry for you to review before saving.</p>
+    <form method="post" action="{% url 'assistant:scan_upload' %}" enctype="multipart/form-data" class="d-flex gap-2 align-items-end">
+        {% csrf_token %}
+        <div class="flex-grow-1">
+            <label class="form-label" for="id-image">Receipt image</label>
+            <input type="file" id="id-image" name="image" accept="image/*" class="form-control form-control-sm" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-stars"></i> Scan with AI</button>
+    </form>
+</div>
+
+<div class="card-surface">
+    <div class="table-responsive">
+    <table class="table table-clean mb-0">
+        <thead><tr><th>Date</th><th>Status</th><th>Uploaded By</th><th>Purchase</th><th></th></tr></thead>
+        <tbody>
+        {% for r in receipts %}
+            <tr>
+                <td>{{ r.created_at|date:"Y-m-d H:i" }}</td>
+                <td>
+                    {% if r.status == "PENDING" %}<span class="badge badge-soft-warning">Pending Review</span>
+                    {% elif r.status == "CONVERTED" %}<span class="badge badge-soft-success">Converted</span>
+                    {% elif r.status == "FAILED" %}<span class="badge badge-soft-danger">Failed</span>
+                    {% else %}<span class="badge badge-soft-primary">Discarded</span>{% endif %}
+                </td>
+                <td>{{ r.uploaded_by.username }}</td>
+                <td>{% if r.purchase_invoice %}<a href="{% url 'purchase:detail' r.purchase_invoice.pk %}">{{ r.purchase_invoice.invoice_no }}</a>{% else %}—{% endif %}</td>
+                <td class="text-end">
+                    {% if r.status == "PENDING" %}<a href="{% url 'assistant:scan_review' r.pk %}" class="btn btn-sm btn-outline-primary">Review</a>{% endif %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="5" class="text-center text-muted py-4">No scanned receipts yet.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

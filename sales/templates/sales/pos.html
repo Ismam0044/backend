@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block page_title %}Sales / POS{% endblock %}
+{% block content %}
+<div class="pos-layout">
+    <div>
+        <div class="d-flex gap-2 align-items-center item-search-box">
+            <select id="warehouse-select" name="warehouse_id" class="form-select" style="max-width: 220px;" aria-label="Warehouse"
+                    hx-get="{% url 'sales:set_warehouse' %}"
+                    hx-target="#item-grid"
+                    hx-trigger="change">
+                {% for w in warehouses %}
+                    <option value="{{ w.id }}" {% if warehouse and w.id == warehouse.id %}selected{% endif %}>{{ w.name }}</option>
+                {% endfor %}
+            </select>
+            <input type="text" name="q" class="form-control" placeholder="Search item by name or code..." aria-label="Search item by name or code"
+                   hx-get="{% url 'sales:item_search' %}"
+                   hx-trigger="keyup changed delay:300ms, load"
+                   hx-target="#item-grid"
+                   hx-include="#warehouse-select"
+                   autocomplete="off">
+        </div>
+        <div id="item-grid" class="item-grid">
+            {% include "sales/_item_grid.html" with tiles=None %}
+        </div>
+    </div>
+
+    <div id="cart-panel">
+        {% include "sales/_cart_panel.html" %}
+    </div>
+</div>
+{% endblock %}

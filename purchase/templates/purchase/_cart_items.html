@@ -1,0 +1,35 @@
+{% if cart_lines %}
+    {% for line in cart_lines %}
+        <div class="cart-line">
+            <div class="flex-grow-1">
+                <div class="line-name">{{ line.name }}</div>
+                <div class="line-meta">
+                    Cost:
+                    <input type="number" step="0.01" min="0" class="qty-input" style="width:70px;" value="{{ line.unit_price }}"
+                           aria-label="Unit cost for {{ line.name }}"
+                           hx-post="{% url 'purchase:update_cart_line' %}"
+                           hx-vals='{"item_id": "{{ line.item_id }}", "field": "unit_price"}'
+                           hx-trigger="change" hx-target="#cart-items" name="value">
+                    &times; {{ line.quantity }} {{ line.unit }} = ৳{{ line.line_total }}
+                </div>
+            </div>
+            <input type="number" step="0.01" min="0" class="qty-input" value="{{ line.quantity }}"
+                   aria-label="Quantity for {{ line.name }}"
+                   hx-post="{% url 'purchase:update_cart_line' %}"
+                   hx-vals='{"item_id": "{{ line.item_id }}", "field": "quantity"}'
+                   hx-trigger="change" hx-target="#cart-items" name="value">
+            <button class="btn btn-sm btn-link text-danger p-0 ms-2"
+                    aria-label="Remove {{ line.name }} from purchase"
+                    hx-post="{% url 'purchase:remove_cart_line' %}"
+                    hx-vals='{"item_id": "{{ line.item_id }}"}'
+                    hx-target="#cart-items">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="cart-empty">
+        <i class="bi bi-box-seam fs-2"></i>
+        <p class="mb-0 small">No items yet. Click an item to add it.</p>
+    </div>
+{% endif %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block page_title %}Parties &amp; Ledger{% endblock %}
+{% block content %}
+<div class="card-surface p-3 mb-3">
+    <form method="get" class="d-flex gap-2">
+        <input type="text" name="q" class="form-control" placeholder="Search by name..." aria-label="Search parties by name" value="{{ q }}">
+        <button type="submit" class="btn btn-primary" aria-label="Search"><i class="bi bi-search"></i></button>
+    </form>
+</div>
+
+<div class="card-surface">
+    <div class="table-responsive">
+    <table class="table table-clean mb-0">
+        <thead>
+            <tr><th>Name</th><th>Type</th><th>Phone</th><th class="text-end">Balance</th><th></th></tr>
+        </thead>
+        <tbody>
+        {% for row in rows %}
+            <tr>
+                <td class="fw-semibold">{{ row.party.name }}</td>
+                <td><span class="badge badge-soft-primary">{{ row.party.get_type_display }}</span></td>
+                <td class="text-muted">{{ row.party.phone|default:"-" }}</td>
+                <td class="text-end {% if row.balance > 0 %}balance-positive{% elif row.balance < 0 %}balance-negative{% else %}balance-zero{% endif %}">
+                    ৳{{ row.balance }}
+                </td>
+                <td class="text-end"><a href="{% url 'parties:detail' row.party.pk %}" class="btn btn-sm btn-outline-primary">View Ledger</a></td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="5" class="text-center text-muted py-4">No parties found.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">Today's Sales</div>
+                    <div class="stat-value">৳{{ todays_sales|floatformat:0 }}</div>
+                </div>
+                <div class="stat-icon badge-soft-primary"><i class="bi bi-cart-check"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">Low Stock Items</div>
+                    <div class="stat-value">{{ low_stock_count }}</div>
+                </div>
+                <div class="stat-icon badge-soft-warning"><i class="bi bi-exclamation-triangle"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">Total Receivable</div>
+                    <div class="stat-value">৳{{ total_receivable|floatformat:0 }}</div>
+                </div>
+                <div class="stat-icon badge-soft-danger"><i class="bi bi-cash-coin"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-label">Parties with Dues</div>
+                    <div class="stat-value">{{ dues_party_count }}</div>
+                </div>
+                <div class="stat-icon badge-soft-primary"><i class="bi bi-people"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <a href="{% url 'sales:pos' %}" class="card-surface d-block p-4 text-decoration-none text-dark">
+            <i class="bi bi-cart-check fs-2 text-primary"></i>
+            <h5 class="mt-2 mb-1">Start a Sale</h5>
+            <p class="text-muted small mb-0">Open the POS screen to bill a customer.</p>
+        </a>
+    </div>
+    <div class="col-md-6">
+        <a href="{% url 'purchase:entry' %}" class="card-surface d-block p-4 text-decoration-none text-dark">
+            <i class="bi bi-truck fs-2 text-primary"></i>
+            <h5 class="mt-2 mb-1">Record a Purchase</h5>
+            <p class="text-muted small mb-0">Receive stock from a supplier.</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

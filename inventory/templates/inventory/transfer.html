@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block page_title %}Stock Transfer{% endblock %}
+{% block content %}
+<div class="pos-layout">
+    <div>
+        <div class="d-flex gap-2 align-items-center item-search-box">
+            <select id="from-warehouse-select" name="from_warehouse_id" class="form-select" style="max-width: 220px;" aria-label="Source warehouse"
+                    hx-get="{% url 'inventory:set_from_warehouse' %}"
+                    hx-target="#item-grid"
+                    hx-trigger="change">
+                {% for w in warehouses %}
+                    <option value="{{ w.id }}" {% if from_warehouse and w.id == from_warehouse.id %}selected{% endif %}>{{ w.name }}</option>
+                {% endfor %}
+            </select>
+            <input type="text" name="q" class="form-control" placeholder="Search item to transfer..." aria-label="Search item to transfer"
+                   hx-get="{% url 'inventory:item_search' %}"
+                   hx-trigger="keyup changed delay:300ms, load"
+                   hx-target="#item-grid"
+                   autocomplete="off">
+        </div>
+        <p class="text-muted small mt-2">Stock shown is what's available at the source warehouse selected above.</p>
+        <div id="item-grid" class="item-grid"></div>
+    </div>
+
+    <div class="cart-panel">
+        <div class="cart-header"><i class="bi bi-arrow-left-right"></i> Transfer Items</div>
+        <div class="cart-items" id="cart-items">
+            {% include "inventory/_cart_items.html" %}
+        </div>
+        <form method="post" action="{% url 'inventory:checkout' %}">
+            {% csrf_token %}
+            <input type="hidden" name="from_warehouse_id" value="{{ from_warehouse.id }}">
+            <div class="px-3 pt-2">
+                <label class="form-label" for="to-warehouse-select">To Warehouse</label>
+                <select id="to-warehouse-select" name="to_warehouse_id" class="form-select form-select-sm mb-2" required>
+                    <option value="">Select destination...</option>
+                    {% for w in warehouses %}
+                        {% if not from_warehouse or w.id != from_warehouse.id %}
+                            <option value="{{ w.id }}">{{ w.name }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <label class="form-label" for="transfer-note">Note</label>
+                <input type="text" id="transfer-note" name="note" class="form-control form-control-sm mb-3" placeholder="Optional note">
+            </div>
+            <div class="px-3 pb-3">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-check2-circle"></i> Complete Transfer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

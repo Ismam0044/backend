@@ -1,0 +1,4 @@
+{% include "sales/_cart_items.html" %}
+<div id="cart-totals" class="cart-footer" data-subtotal="{{ cart_subtotal }}" hx-swap-oob="true">
+    {% include "sales/_cart_totals.html" %}
+</div>

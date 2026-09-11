@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block page_title %}Smart Reorder Suggestions{% endblock %}
+{% block content %}
+<div class="card-surface p-3 mb-3">
+    <form method="get" class="d-flex gap-2 align-items-end flex-wrap">
+        <div>
+            <label class="form-label" for="id-warehouse">Warehouse</label>
+            <select id="id-warehouse" name="warehouse_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">All</option>
+                {% for w in warehouses %}
+                    <option value="{{ w.id }}" {% if selected_warehouse_id == w.id|stringformat:"s" %}selected{% endif %}>{{ w.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="button" class="btn btn-sm btn-primary"
+                hx-post="{% url 'assistant:reorder_summary' %}"
+                hx-include="#id-warehouse"
+                hx-target="#ai-summary"
+                hx-indicator="#summary-loading">
+            <i class="bi bi-stars"></i> Get AI Summary
+        </button>
+        <span id="summary-loading" class="htmx-indicator small text-muted">Thinking...</span>
+    </form>
+</div>
+
+<div id="ai-summary"></div>
+
+<div class="card-surface">
+    <div class="table-responsive">
+    <table class="table table-clean mb-0">
+        <thead><tr><th>Item</th><th>Warehouse</th><th class="text-end">Current Stock</th><th class="text-end">Daily Sales</th><th class="text-end">Suggested Reorder</th></tr></thead>
+        <tbody>
+        {% for s in suggestions %}
+            <tr>
+                <td class="fw-semibold">{{ s.item.name }}</td>
+                <td>{{ s.warehouse.name }}</td>
+                <td class="text-end">{{ s.current_stock }} {{ s.item.unit.short_name }}</td>
+                <td class="text-end text-muted">{{ s.daily_velocity }}/day</td>
+                <td class="text-end balance-positive">{{ s.suggested_qty }} {{ s.item.unit.short_name }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="5" class="text-center text-muted py-4">No reorder suggestions right now — stock looks healthy relative to recent sales.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block page_title %}AI Assistant{% endblock %}
+{% block content %}
+<div class="card-surface d-flex flex-column mx-auto" style="height: calc(100vh - 8rem); max-width: 760px;">
+    <div class="cart-header"><i class="bi bi-stars"></i> Ask about your business</div>
+    <div id="chat-history" class="flex-grow-1 p-3" style="overflow-y:auto;">
+        {% for q in history %}
+            {% include "assistant/_chat_turn.html" with query=q %}
+        {% empty %}
+            <div class="cart-empty">
+                <i class="bi bi-chat-dots fs-2"></i>
+                <p class="mb-0 small">Ask things like "What are today's sales?" or "Which customers owe me the most?"</p>
+            </div>
+        {% endfor %}
+    </div>
+    <form id="chat-form" class="d-flex gap-2 p-3 border-top"
+          hx-post="{% url 'assistant:chat_ask' %}"
+          hx-target="#chat-history"
+          hx-swap="beforeend"
+          hx-indicator="#chat-loading">
+        {% csrf_token %}
+        <input type="text" name="question" id="chat-question" class="form-control" placeholder="Ask a question about your business..." autocomplete="off" required>
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-send"></i>
+        </button>
+        <span id="chat-loading" class="htmx-indicator align-self-center small text-muted">Thinking...</span>
+    </form>
+</div>
+<script>
+    (function () {
+        var form = document.getElementById('chat-form');
+        var input = document.getElementById('chat-question');
+        var history = document.getElementById('chat-history');
+        form.addEventListener('htmx:afterRequest', function () {
+            form.reset();
+            input.focus();
+            history.scrollTop = history.scrollHeight;
+        });
+    })();
+</script>
+{% endblock %}

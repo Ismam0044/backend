@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block page_title %}Review Scanned Receipt{% endblock %}
+{% block content %}
+<div class="row g-3">
+    <div class="col-md-5">
+        <div class="card-surface p-2">
+            <img src="{{ receipt.image.url }}" alt="Scanned receipt" style="width:100%; border-radius: 8px;">
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div class="card-surface p-3">
+            <h6 class="mb-1"><i class="bi bi-stars text-primary"></i> Review Extracted Data</h6>
+            <p class="text-muted small">AI extracted this from the image — check and correct anything before saving as a purchase.</p>
+
+            {% if extracted_supplier %}
+                <p class="small mb-3">AI read the supplier as: <strong>{{ extracted_supplier }}</strong>{% if extracted_date %} · dated {{ extracted_date }}{% endif %}. Pick the matching supplier below (create it first via Admin if it doesn't exist yet).</p>
+            {% endif %}
+
+            <form method="post" action="{% url 'assistant:scan_confirm' receipt.pk %}">
+                {% csrf_token %}
+                <div class="row g-2 mb-3">
+                    <div class="col">
+                        <label class="form-label" for="id-warehouse">Receiving Warehouse</label>
+                        <select id="id-warehouse" name="warehouse_id" class="form-select form-select-sm" required>
+                            <option value="">Select...</option>
+                            {% for w in warehouses %}<option value="{{ w.id }}">{{ w.name }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label class="form-label" for="id-supplier">Supplier</label>
+                        <select id="id-supplier" name="supplier_id" class="form-select form-select-sm" required>
+                            <option value="">Select...</option>
+                            {% for s in suppliers %}<option value="{{ s.id }}" {% if s.name == extracted_supplier %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                <table class="table table-clean mb-2">
+                    <thead><tr><th>Matched Item</th><th class="text-end">Qty</th><th class="text-end">Unit Price</th></tr></thead>
+                    <tbody>
+                    {% for line in lines %}
+                        <tr>
+                            <td>
+                                <select name="item_id" class="form-select form-select-sm" aria-label="Matched item for {{ line.raw_name }}">
+                                    <option value="">— unmatched: "{{ line.raw_name }}" —</option>
+                                    {% for it in all_items %}
+                                        <option value="{{ it.id }}" {% if line.matched_item and it.id == line.matched_item.id %}selected{% endif %}>{{ it.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td><input type="number" step="0.01" name="quantity" value="{{ line.quantity }}" class="form-control form-control-sm text-end" style="width:90px;" aria-label="Quantity for {{ line.raw_name }}"></td>
+                            <td><input type="number" step="0.01" name="unit_price" value="{{ line.unit_price }}" class="form-control form-control-sm text-end" style="width:100px;" aria-label="Unit price for {{ line.raw_name }}"></td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="3" class="text-center text-muted py-3">AI couldn't find any line items in this image — discard and try a clearer photo.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="id-paid">Amount Paid Now</label>
+                    <input type="number" step="0.01" min="0" id="id-paid" name="paid_amount" class="form-control form-control-sm" value="0">
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-check2-circle"></i> Confirm &amp; Create Purchase</button>
+            </form>
+            <form method="post" action="{% url 'assistant:scan_discard' receipt.pk %}" class="mt-2">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-secondary btn-sm w-100">Discard this scan</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

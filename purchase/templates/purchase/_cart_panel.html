@@ -1,0 +1,61 @@
+<div class="cart-panel">
+    <div class="cart-header"><i class="bi bi-truck"></i> Current Purchase
+        {% if warehouse %}<span class="badge badge-soft-primary float-end">{{ warehouse.name }}</span>{% endif %}
+    </div>
+    <div class="cart-items" id="cart-items">
+        {% include "purchase/_cart_items.html" %}
+    </div>
+    <form id="checkout-form" method="post" action="{% url 'purchase:checkout' %}">
+        {% csrf_token %}
+        <div class="px-3 pt-2">
+            <label class="form-label" for="id-supplier">Supplier</label>
+            <select id="id-supplier" name="supplier_id" class="form-select form-select-sm mb-2" required>
+                <option value="">Select supplier...</option>
+                {% for s in suppliers %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+            </select>
+            <label class="form-label" for="id-payment-mode">Payment Mode</label>
+            <select id="id-payment-mode" name="payment_mode" class="form-select form-select-sm mb-2">
+                <option value="CASH">Cash</option>
+                <option value="BANK">Bank</option>
+                <option value="BKASH">bKash</option>
+                <option value="NAGAD">Nagad</option>
+            </select>
+            <div class="row g-2 mb-2">
+                <div class="col">
+                    <label class="form-label" for="discount-input">Discount</label>
+                    <input type="number" step="0.01" min="0" id="discount-input" name="discount" class="form-control form-control-sm" value="0">
+                </div>
+                <div class="col">
+                    <label class="form-label" for="id-paid-amount">Paid</label>
+                    <input type="number" step="0.01" min="0" id="id-paid-amount" name="paid_amount" class="form-control form-control-sm" value="0">
+                </div>
+            </div>
+        </div>
+        <div id="cart-totals" class="cart-footer" data-subtotal="{{ cart_subtotal }}">
+            {% include "purchase/_cart_totals.html" %}
+        </div>
+        <div class="px-3 pb-3">
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-check2-circle"></i> Record Purchase
+            </button>
+        </div>
+    </form>
+</div>
+<script>
+    (function () {
+        function recompute() {
+            var totalsBox = document.getElementById('cart-totals');
+            if (!totalsBox) return;
+            var subtotal = parseFloat(totalsBox.dataset.subtotal || '0');
+            var discountInput = document.getElementById('discount-input');
+            var discount = parseFloat((discountInput && discountInput.value) || '0') || 0;
+            var grandEl = totalsBox.querySelector('.grand span:last-child');
+            if (grandEl) grandEl.textContent = '৳' + (subtotal - discount).toFixed(2);
+        }
+        document.body.addEventListener('input', function (e) {
+            if (e.target && e.target.id === 'discount-input') recompute();
+        });
+        document.body.addEventListener('htmx:afterSwap', recompute);
+        recompute();
+    })();
+</script>

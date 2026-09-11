@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block page_title %}Reports{% endblock %}
+{% block content %}
+<div class="row g-3">
+    <div class="col-md-4">
+        <a href="{% url 'reports:daily_sales' %}" class="card-surface d-block p-4 text-decoration-none text-dark">
+            <i class="bi bi-graph-up fs-2 text-primary"></i>
+            <h5 class="mt-2 mb-1">Daily Sales</h5>
+            <p class="text-muted small mb-0">Sales register for a given day, by warehouse.</p>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'reports:low_stock' %}" class="card-surface d-block p-4 text-decoration-none text-dark">
+            <i class="bi bi-exclamation-triangle fs-2 text-warning"></i>
+            <h5 class="mt-2 mb-1">Low Stock</h5>
+            <p class="text-muted small mb-0">Items at or below their reorder level.</p>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'reports:dues' %}" class="card-surface d-block p-4 text-decoration-none text-dark">
+            <i class="bi bi-cash-coin fs-2 text-danger"></i>
+            <h5 class="mt-2 mb-1">Dues</h5>
+            <p class="text-muted small mb-0">Receivables and payables across all parties.</p>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'accounts:cash_book' %}" class="card-surface d-block p-4 text-decoration-none text-dark">
+            <i class="bi bi-journal-text fs-2 text-primary"></i>
+            <h5 class="mt-2 mb-1">Cash Book</h5>
+            <p class="text-muted small mb-0">Cash in/out ledger by warehouse and date.</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

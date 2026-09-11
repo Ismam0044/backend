@@ -1,0 +1,14 @@
+{% if items %}
+    {% for item in items %}
+        <div class="item-tile" hx-post="{% url 'purchase:add_to_cart' %}"
+             hx-vals='{"item_id": "{{ item.id }}"}'
+             hx-target="#cart-items"
+             hx-swap="innerHTML">
+            <div class="item-name">{{ item.name }}</div>
+            <div class="item-meta">{{ item.code|default:"" }} &middot; {{ item.unit.short_name }}</div>
+            <div class="item-price">Cost: ৳{{ item.cost_price }}</div>
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="text-muted small p-3">No items found. Try a different search, or add items from the admin panel.</div>
+{% endif %}
