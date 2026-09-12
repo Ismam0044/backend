@@ -9,8 +9,10 @@ from api.views.inventory import (
     StockTransferDetailView,
     StockTransferListView,
 )
-from api.views.parties import PartyListView
+from api.views.accounts import CashBookCreateView, CashBookListView
+from api.views.parties import PartyDetailView, PartyListView, RecordTransactionView
 from api.views.purchase import PurchaseCheckoutView, PurchaseInvoiceDetailView, PurchaseInvoiceListView
+from api.views.reports import DailySalesReportView, DuesReportView, LowStockReportView
 from api.views.sales import SalesCheckoutView, SalesInvoiceDetailView, SalesInvoiceListView
 
 app_name = "api"
@@ -34,6 +36,17 @@ urlpatterns = [
 
     # --- parties -----------------------------------------------------------
     path("parties/", PartyListView.as_view(), name="party_list"),
+    path("parties/<int:pk>/", PartyDetailView.as_view(), name="party_detail"),
+    path("parties/<int:pk>/transactions/", RecordTransactionView.as_view(), name="party_record_transaction"),
+
+    # --- accounts ------------------------------------------------------------
+    path("accounts/cashbook/", CashBookListView.as_view(), name="cashbook_list"),
+    path("accounts/cashbook/add/", CashBookCreateView.as_view(), name="cashbook_create"),
+
+    # --- reports -------------------------------------------------------------
+    path("reports/low-stock/", LowStockReportView.as_view(), name="report_low_stock"),
+    path("reports/dues/", DuesReportView.as_view(), name="report_dues"),
+    path("reports/daily-sales/", DailySalesReportView.as_view(), name="report_daily_sales"),
 
     # --- sales -------------------------------------------------------------
     path("sales/checkout/", SalesCheckoutView.as_view(), name="sales_checkout"),

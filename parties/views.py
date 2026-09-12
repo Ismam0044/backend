@@ -3,20 +3,13 @@ from decimal import Decimal, InvalidOperation
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from accounts.models import Voucher
-from core.models import Warehouse
-from core.utils import resolve_warehouse
+from core.utils import accessible_warehouses, resolve_warehouse
 
 from .models import LedgerEntry, Party
-
-
-def _accessible_warehouses(user):
-    if user.role == user.Role.OWNER or not user.assigned_warehouses.exists():
-        return Warehouse.objects.filter(is_active=True)
-    return user.assigned_warehouses.filter(is_active=True)
+from .services import record_transaction as record_transaction_service
 
 
 @login_required
@@ -45,7 +38,7 @@ def party_detail(request, pk):
         "party": party,
         "balance": party.get_balance(),
         "history": history,
-        "warehouses": _accessible_warehouses(request.user),
+        "warehouses": accessible_warehouses(request.user),
     }
     return render(request, "parties/detail.html", context)
 
@@ -54,7 +47,7 @@ def party_detail(request, pk):
 @require_POST
 def record_transaction(request, pk):
     party = get_object_or_404(Party, pk=pk)
-    warehouses = _accessible_warehouses(request.user)
+    warehouses = accessible_warehouses(request.user)
     warehouse = resolve_warehouse(warehouses, request.POST.get("warehouse_id")) or warehouses.first()
 
     try:
@@ -72,25 +65,8 @@ def record_transaction(request, pk):
         messages.error(request, "No warehouse available for this user.")
         return redirect("parties:detail", pk=pk)
 
-    today = timezone.localdate()
-    Voucher.objects.create(
-        voucher_type=voucher_type,
-        warehouse=warehouse,
-        party=party,
-        date=today,
-        amount=amount,
-        mode=mode,
-        description=f"{voucher_type.title()} against {party.name}",
-        created_by=request.user,
-    )
-    LedgerEntry.objects.create(
-        party=party,
-        date=today,
-        entry_type=LedgerEntry.EntryType.CREDIT if voucher_type == Voucher.VoucherType.RECEIPT else LedgerEntry.EntryType.DEBIT,
-        amount=amount,
-        reference=f"{voucher_type}-{timezone.now():%Y%m%d%H%M%S}",
-        description=f"{voucher_type.title()} ({mode})",
-        created_by=request.user,
+    record_transaction_service(
+        party=party, warehouse=warehouse, voucher_type=voucher_type, mode=mode, amount=amount, user=request.user,
     )
 
     messages.success(request, "Transaction recorded.")
