@@ -1,13 +1,21 @@
 from decimal import Decimal
 
 from django.db.models import Q
-from rest_framework.generics import ListAPIView
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from core.models import Warehouse
 from core.utils import accessible_warehouses
-from inventory.models import Item, Stock
+from inventory.models import Item, Stock, StockTransfer
+from inventory.services import InsufficientStockError, complete_transfer
 
-from api.serializers.inventory import ItemSerializer
+from api.exceptions import ApiValidationError
+from api.serializers.inventory import ItemSerializer, StockTransferCheckoutSerializer, StockTransferSerializer
 
 
 class ItemSearchView(ListAPIView):
@@ -48,3 +56,58 @@ class ItemSearchView(ListAPIView):
                     item._stock_quantity = stock_by_item.get(item.id, Decimal("0"))
 
         return items
+
+
+class StockTransferCheckoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = StockTransferCheckoutSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        from_warehouse = get_object_or_404(Warehouse, pk=data["from_warehouse_id"], is_active=True)
+        to_warehouse = get_object_or_404(Warehouse, pk=data["to_warehouse_id"], is_active=True)
+        if not request.user.has_warehouse_access(from_warehouse) or not request.user.has_warehouse_access(to_warehouse):
+            raise PermissionDenied("You don't have access to one of these warehouses.")
+
+        # complete_transfer() wants resolved Item objects, not ids - mirrors how
+        # assistant/views.py::scan_confirm resolves items before building its cart.
+        lines = []
+        for line in data["lines"]:
+            item = get_object_or_404(Item, pk=line["item_id"])
+            lines.append({"item": item, "quantity": line["quantity"]})
+
+        try:
+            transfer = complete_transfer(
+                from_warehouse=from_warehouse,
+                to_warehouse=to_warehouse,
+                date=timezone.localdate(),
+                lines=lines,
+                user=request.user,
+                note=data["note"],
+            )
+        except InsufficientStockError as exc:
+            raise ApiValidationError(str(exc), code="insufficient_stock")
+        except ValueError as exc:
+            raise ApiValidationError(str(exc), code="invalid_transfer")
+
+        return Response(StockTransferSerializer(transfer).data, status=201)
+
+
+class StockTransferListView(ListAPIView):
+    serializer_class = StockTransferSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return (
+            StockTransfer.objects.select_related("from_warehouse", "to_warehouse")
+            .prefetch_related("items__item__unit")
+            .order_by("-id")
+        )
+
+
+class StockTransferDetailView(RetrieveAPIView):
+    serializer_class = StockTransferSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = StockTransfer.objects.select_related("from_warehouse", "to_warehouse").prefetch_related("items__item__unit")
