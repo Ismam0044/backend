@@ -10,6 +10,17 @@ from api.views.inventory import (
     StockTransferListView,
 )
 from api.views.accounts import CashBookCreateView, CashBookListView
+from api.views.assistant import (
+    ChatAskView,
+    ChatHistoryView,
+    ReceiptConfirmView,
+    ReceiptDetailView,
+    ReceiptDiscardView,
+    ReceiptListView,
+    ReceiptUploadView,
+    ReorderSuggestionsView,
+    ReorderSummarizeView,
+)
 from api.views.parties import PartyDetailView, PartyListView, RecordTransactionView
 from api.views.purchase import PurchaseCheckoutView, PurchaseInvoiceDetailView, PurchaseInvoiceListView
 from api.views.reports import DailySalesReportView, DuesReportView, LowStockReportView
@@ -57,4 +68,15 @@ urlpatterns = [
     path("purchase/checkout/", PurchaseCheckoutView.as_view(), name="purchase_checkout"),
     path("purchase/invoices/", PurchaseInvoiceListView.as_view(), name="purchase_invoice_list"),
     path("purchase/invoices/<int:pk>/", PurchaseInvoiceDetailView.as_view(), name="purchase_invoice_detail"),
+
+    # --- assistant (AI) ------------------------------------------------------
+    path("assistant/chat/ask/", ChatAskView.as_view(), name="chat_ask"),
+    path("assistant/chat/history/", ChatHistoryView.as_view(), name="chat_history"),
+    path("assistant/reorder/", ReorderSuggestionsView.as_view(), name="reorder_suggestions"),
+    path("assistant/reorder/summarize/", ReorderSummarizeView.as_view(), name="reorder_summarize"),
+    path("assistant/receipts/", ReceiptListView.as_view(), name="receipt_list"),
+    path("assistant/receipts/upload/", ReceiptUploadView.as_view(), name="receipt_upload"),
+    path("assistant/receipts/<int:pk>/", ReceiptDetailView.as_view(), name="receipt_detail"),
+    path("assistant/receipts/<int:pk>/confirm/", ReceiptConfirmView.as_view(), name="receipt_confirm"),
+    path("assistant/receipts/<int:pk>/discard/", ReceiptDiscardView.as_view(), name="receipt_discard"),
 ]
